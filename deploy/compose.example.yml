@@ -1,0 +1,50 @@
+# Example Docker deployment: Switchboard + test service on a private network.
+# For rootless podman use deploy/podman.sh instead (D21).
+# Copy to deploy/compose.yml and adjust. Paths are relative to this file, so
+# ../volumes is the repository's git-ignored volumes/ directory. Secrets live
+# in files there, readable by uid 10001, never in this file:
+#
+#   volumes/config/bot_token        Telegram bot token
+#   volumes/config/producers.json   {"research": "<long random token>", ...}
+#
+# Only ONE switchboard replica may run (it owns the SQLite queue and the
+# Telegram polling loop).
+
+services:
+  switchboard:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    environment:
+      SWITCHBOARD_BOT_TOKEN_FILE: /volumes/config/bot_token
+      SWITCHBOARD_PRODUCER_KEYS_FILE: /volumes/config/producers.json
+      SWITCHBOARD_TELEGRAM_USER_ID: "123456789"
+      SWITCHBOARD_TELEGRAM_CHAT_ID: "123456789"
+      SWITCHBOARD_TEST_SERVICE_URL: http://test-service:8081
+      # Bound beyond loopback *inside* the container; reachable only on the
+      # private compose network (no "ports:" section).
+      SWITCHBOARD_BIND_HOST: 0.0.0.0
+      SWITCHBOARD_BIND_PORT: "8080"
+    volumes:
+      - ../volumes/data:/volumes/data
+      - ../volumes/config:/volumes/config:ro
+      - ../volumes/logs:/volumes/logs
+    networks: [internal, egress]
+    # To reach it from the host for local producers, publish on loopback only:
+    # ports: ["127.0.0.1:8080:8080"]
+
+  test-service:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: ["uvicorn", "test_service.main:app", "--host", "0.0.0.0", "--port", "8081"]
+    restart: unless-stopped
+    networks: [internal]
+
+networks:
+  # Private, no internet: switchboard <-> test-service only.
+  internal:
+    internal: true
+  # Normal bridge network so switchboard can reach api.telegram.org.
+  egress: {}

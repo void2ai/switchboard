@@ -1,0 +1,12 @@
+# Keep the build context small and free of secrets and local state.
+.git
+.github
+.venv
+.kilo
+**/__pycache__
+.pytest_cache
+.ruff_cache
+*.egg-info
+volumes
+docs
+tests

@@ -1,0 +1,51 @@
+[project]
+name = "switchboard"
+version = "0.0.1"
+description = "Small daemon that connects local services to one human through Telegram."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "starlette>=0.46,<1",
+    "uvicorn>=0.30,<1",
+    "httpx>=0.27,<1",
+    "pydantic>=2.7,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+    "ruff>=0.5",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*", "test_service*"]
+
+[tool.setuptools.package-data]
+"app.db" = ["schema.sql", "migrations/*.sql"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "ASYNC"]
+ignore = [
+    "S101",  # assert is fine in tests
+    "S311",  # random is used for backoff jitter, not for security
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S108"]
