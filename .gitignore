@@ -18,6 +18,9 @@ volumes/config/*
 docs/
 !docs/
 docs/*
+!docs/DECISIONS.md
 !docs/podman_real_run_checklist.md
 !docs/mvp_verification_2026-09-28.md
+!docs/switchboard_spec_v0.0.0_mvp.md
+!docs/switchboard_spec_v0.0.0_mvp_plan.md
 !docs/switchboard_spec_v0.0.1_mvp.md
